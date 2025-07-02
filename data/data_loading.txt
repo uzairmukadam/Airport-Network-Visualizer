@@ -1,0 +1,57 @@
+LOAD CSV WITH HEADERS FROM 'file:///Airlines.csv' AS line
+CREATE (a:Airline {
+  id: line.`Airline ID`,
+  name: line.Name,
+  alias: line.Alias,
+  iata: line.IATA,
+  icao: line.ICAO,
+  country: line.Country,
+  active: line.Active
+});
+
+LOAD CSV WITH HEADERS FROM 'file:///Airplanes.csv' AS line
+CREATE (ap:Airplane {
+  name: line.Name,
+  iata: line.`IATA code`,
+  icao: line.`ICAO code`
+});
+
+LOAD CSV WITH HEADERS FROM 'file:///Airports.csv' AS line
+CREATE (ap:Airport {
+  id: line.`Airport ID`,
+  name: line.Name,
+  city: line.City,
+  country: line.Country,
+  iata: line.IATA,
+  icao: line.ICAO,
+  latitude: toFloat(line.Latitude),
+  longitude: toFloat(line.Longitude),
+  altitude: toInteger(line.Altitude),
+  timezone: line.Timezone,
+  dst: line.DST,
+  tz_database_time_zone: line.`Tz database time zone`,
+  type: line.Type,
+  source: line.Source
+});
+
+LOAD CSV WITH HEADERS FROM 'file:///Routes.csv' AS line
+MATCH (source:Airport {id: line.`Source airport ID`})
+MATCH (destination:Airport {id: line.`Destination airport ID`})
+WHERE line.Codeshare IS NOT NULL
+MERGE (source)-[:FLIES_TO {
+  codeshare: line.Codeshare,
+  stops: toInteger(line.Stops),
+  equipment: line.Equipment
+}]->(destination);
+
+LOAD CSV WITH HEADERS FROM 'file:///cleaned_routes.csv' AS line
+MATCH (source:Airport {id: line.`Source airport ID`})
+MATCH (destination:Airport {id: line.`Destination airport ID`})
+MERGE (source)-[:FLIES_TO]->(destination);
+Created 36708 relationships, completed after 207028 ms.
+
+
+## Set 37815 properties, created 12605 relationships, completed after 134894 ms.
+
+CREATE INDEX FOR (a:Airport) ON (a.iata);
+CREATE INDEX FOR (a:Airport) ON (a.country);

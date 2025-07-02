@@ -1,0 +1,64 @@
+1. Find the Shortest Path Between Two Airports
+
+MATCH path = shortestPath((x:Airport {iata: "BOS"})-[:FLIES_TO*..5]->(y:Airport {iata: "ROC"}))
+RETURN nodes(path);
+
+
+---
+
+2. Get All Airports for a Country
+
+MATCH (a:Airport {country: "United States"})
+RETURN a
+ORDER BY a.name;
+
+
+---
+
+3. Get All Airports Directly Connected to the Source in the Same Country
+
+MATCH (s:Airport {iata: "JFK"})-[:FLIES_TO]->(d:Airport {country: "United States"})
+RETURN s, d;
+
+
+---
+
+4. Get All Airports Directly Connected to the Source
+
+MATCH (s:Airport {iata: "JFK"})-[:FLIES_TO]->(d:Airport)
+RETURN s, d;
+
+
+---
+
+5. Get the Airport with the Most Connections
+
+MATCH (a:Airport)-[r:FLIES_TO]->(b:Airport)
+WHERE a.country = "United States"
+RETURN a.name AS AirportName, COUNT(r) AS TotalFlights
+ORDER BY TotalFlights DESC
+LIMIT 1;
+
+
+---
+
+6. Get All Remote Airports for a Nation
+
+MATCH (a:Airport)-[r:FLIES_TO]->(b:Airport)
+WHERE a.country = "United States"
+WITH a, COUNT(r) AS TotalFlights
+WHERE TotalFlights = 1
+RETURN a.name AS AirportName, TotalFlights
+ORDER BY AirportName ASC;
+
+
+---
+
+7. Find If a Direct Path Is Possible Between Airports
+
+WITH ["JFK", "LAX", "ORD"] AS iataCodes
+UNWIND range(0, size(iataCodes) - 2) AS index
+MATCH (start:Airport {iata: iataCodes[index]})-[:FLIES_TO]->(end:Airport {iata: iataCodes[index + 1]})
+RETURN start, end;
+
+---
